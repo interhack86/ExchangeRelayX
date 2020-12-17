@@ -10,6 +10,21 @@ Released at Defcon26. View the background on the tool, the core issues being exp
 # Usage
 	./exchangeRelayx.py -t https://mail.quickbreach.com
 
+# Using docker
+
+```sh
+$ git clone https://github.com/interhack86/ExchangeRelayX.git
+$ sudo docker build -t exchangerelayx .
+$ sudo docker run --rm -it exchangerelayx -h
+```
+
+or 
+
+```sh
+$ sudo docker pull interhack/exchangerelayx
+$ sudo docker run --rm -it interhack/exchangerelayx -h
+```
+
 # Features
 - Raw XML Access to the EWS server, so you can send requests to functions and features that were not pre-programmed in exchangeRelayx
 - Add redirecting rules to the victim's email for backdooring
